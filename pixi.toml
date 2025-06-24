@@ -1,0 +1,71 @@
+[project]
+name = "pdf-summarizer"
+version = "0.1.0"
+description = "PDF Summarizer with Ollama - Create Blinkist-style summaries and categorize PDFs"
+authors = ["PDF Summarizer <pdf-summarizer@example.com>"]
+channels = ["conda-forge", "pytorch"]
+platforms = ["osx-64", "osx-arm64", "linux-64", "win-64"]
+
+[dependencies]
+python = ">=3.8,<3.12"
+python-dotenv = ">=1.0.0"
+nltk = ">=3.8.1"
+scikit-learn = ">=1.3.2"
+numpy = ">=1.24.3"
+pandas = ">=1.5.3"
+rich = ">=13.7.0"
+click = ">=8.1.7"
+requests = ">=2.31.0"
+
+[pypi-dependencies]
+pypdf2 = ">=3.0.1"
+pdfplumber = ">=0.10.0"
+ollama = ">=0.1.7"
+
+[tasks]
+setup = { cmd = "python main.py setup", cwd = "." }
+process = { cmd = "python main.py process", cwd = "." }
+batch = { cmd = "python main.py batch", cwd = "." }
+models = { cmd = "python main.py models", cwd = "." }
+
+[tasks.install-ollama]
+cmd = "bash -c 'if command -v ollama >/dev/null 2>&1; then echo \"Ollama already installed\"; else echo \"Installing Ollama...\"; if [ \"$(uname)\" = \"Darwin\" ]; then if command -v brew >/dev/null 2>&1; then brew install ollama; else echo \"Please install Ollama from https://ollama.ai\"; fi; elif [ \"$(uname)\" = \"Linux\" ]; then curl -fsSL https://ollama.ai/install.sh | sh; else echo \"Please install Ollama from https://ollama.ai\"; fi; fi'"
+
+[tasks.pull-model]
+cmd = "ollama pull mistral:latest"
+depends-on = ["install-ollama"]
+
+[tasks.start-ollama]
+cmd = "bash -c 'if pgrep -x ollama >/dev/null 2>&1; then echo \"Ollama is already running\"; else echo \"Starting Ollama...\"; ollama serve & sleep 3; fi'"
+
+[tasks.dev-setup]
+cmd = "python main.py setup"
+cwd = "."
+depends-on = ["install-ollama", "pull-model", "start-ollama"]
+
+[tasks.example-single]
+cmd = "python main.py process example.pdf"
+cwd = "."
+description = "Process a single PDF file"
+
+[tasks.example-batch]
+cmd = "python main.py batch ./pdfs --report"
+cwd = "."
+description = "Process all PDFs in ./pdfs directory with report"
+
+[tasks.lint]
+cmd = "python -m flake8 ."
+cwd = "."
+
+[tasks.format]
+cmd = "python -m black ."
+cwd = "."
+
+[feature.dev.dependencies]
+black = "*"
+flake8 = "*"
+pytest = "*"
+
+[environments]
+default = { solve-group = "default" }
+dev = { features = ["dev"], solve-group = "default" }
