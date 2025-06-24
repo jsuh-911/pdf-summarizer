@@ -33,7 +33,7 @@ MANIFEST
 # Output directories
 summaries/
 *.json
-*.md
+summaries/*.md
 
 # IDE
 .vscode/
