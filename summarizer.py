@@ -179,53 +179,80 @@ class PDFSummarizer:
             self.console.print(f"[green]Simple Format Saved:[/green] {simple_path}")
     
     def _generate_filename(self, result: Dict, original_path: str) -> str:
-        """Generate intelligent filename based on author and year"""
+        """Generate filename based on author last name"""
         try:
             summary = result.get('summary', {})
             if not isinstance(summary, dict):
-                # Fallback to original filename
+                # Debug: print what we actually got
+                self.console.print(f"[yellow]Debug: summary is not dict, got {type(summary)}[/yellow]")
                 return Path(original_path).stem
             
             # Extract author(s) and year
             authors_str = summary.get('Author(s)', '')
             year = summary.get('Year Published', '')
             
+            # Debug: print what we extracted
+            self.console.print(f"[blue]Debug: Authors='{authors_str}', Year='{year}'[/blue]")
+            
             # Clean and parse authors
             if not authors_str or authors_str in ['Not specified', 'not specified', '']:
-                # No author info, use original filename
+                self.console.print(f"[yellow]Debug: No author info found[/yellow]")
                 return Path(original_path).stem
             
-            # Parse authors - handle various formats
-            authors = self._parse_authors(authors_str)
+            # Simple author parsing - extract first author's last name
+            author_last_name = self._extract_first_author_lastname(authors_str)
             
-            if not authors:
+            if not author_last_name:
+                self.console.print(f"[yellow]Debug: Could not extract last name[/yellow]")
                 return Path(original_path).stem
             
-            # Generate filename based on rules
-            if len(authors) == 1:
-                # Rule 1: Last name of first author
-                filename_base = authors[0]
-                if year and str(year) not in ['null', 'None', '']:
-                    filename_base += f"-{year}"
-            elif len(authors) >= 2:
-                # Rule 2: First and second author last names
-                filename_base = f"{authors[0]}-{authors[1]}"
-                if year and str(year) not in ['null', 'None', '']:
-                    filename_base += f"-{year}"
-            else:
-                # Fallback
-                filename_base = authors[0]
-                if year and str(year) not in ['null', 'None', '']:
-                    filename_base += f"-{year}"
+            # Generate filename: LastName or LastName-Year
+            filename_base = author_last_name
+            if year and str(year) not in ['null', 'None', '', 'Not specified']:
+                filename_base += f"-{year}"
             
             # Clean filename - remove invalid characters
             filename_base = self._clean_filename(filename_base)
             
+            self.console.print(f"[green]Generated filename: {filename_base}[/green]")
             return filename_base
             
         except Exception as e:
-            self.console.print(f"[yellow]Warning: Could not generate smart filename: {e}[/yellow]")
+            self.console.print(f"[red]Error generating filename: {e}[/red]")
             return Path(original_path).stem
+    
+    def _extract_first_author_lastname(self, authors_str: str) -> str:
+        """Extract the last name of the first author from various formats"""
+        try:
+            # Clean the string
+            authors_str = authors_str.strip()
+            
+            # Handle common formats:
+            # "Smith, John" -> "Smith"
+            # "John Smith" -> "Smith" 
+            # "Smith, John and Jones, Mary" -> "Smith"
+            # "John Smith and Mary Jones" -> "Smith"
+            
+            # Split by "and" to get first author
+            if ' and ' in authors_str:
+                first_author = authors_str.split(' and ')[0].strip()
+            else:
+                first_author = authors_str.strip()
+            
+            # Handle "Last, First" format
+            if ', ' in first_author:
+                return first_author.split(',')[0].strip()
+            
+            # Handle "First Last" format - take last word
+            words = first_author.split()
+            if words:
+                # Return last word (assumed to be last name)
+                return words[-1].strip()
+            
+            return ""
+            
+        except Exception:
+            return ""
     
     def _parse_authors(self, authors_str: str) -> List[str]:
         """Parse author string and extract last names"""
