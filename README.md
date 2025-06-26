@@ -40,6 +40,18 @@ pixi install
 pixi run dev-setup
 ```
 
+3. Set up PostgreSQL database (optional but recommended):
+```bash
+# Create database (if PostgreSQL is already installed)
+createdb pdf_summarizer
+
+# Initialize database schema
+pixi run init-db
+
+# Verify database setup
+pixi run db-stats
+```
+
 ### Option 2: Pure Python Setup (No conda-forge)
 
 1. Clone the repository:
@@ -57,6 +69,19 @@ python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ollama pull mistral:latest
+```
+
+3. Set up PostgreSQL database (optional but recommended):
+```bash
+# Create database (if PostgreSQL is already installed)
+createdb pdf_summarizer
+
+# Initialize database schema (activate venv first)
+source venv/bin/activate
+python main.py init-db
+
+# Verify database setup
+python main.py stats
 ```
 
 ### Manual Ollama Setup (if needed)
@@ -167,7 +192,7 @@ The application includes full PostgreSQL database integration for organizing and
 
 ### Database Setup
 
-1. **Install PostgreSQL**:
+1. **PostgreSQL Installation** (if not already installed):
    ```bash
    # macOS with Homebrew
    brew install postgresql
@@ -178,15 +203,38 @@ The application includes full PostgreSQL database integration for organizing and
    sudo systemctl start postgresql
    ```
 
-2. **Create Database**:
+2. **Create the PDF Summarizer Database**:
    ```bash
+   # Create a new database specifically for this app
    createdb pdf_summarizer
    ```
+   This creates an empty database named `pdf_summarizer`. PostgreSQL can have multiple databases - this creates one just for our application.
 
-3. **Initialize Schema**:
+3. **Initialize Database Schema**:
    ```bash
+   # Create tables, indexes, and schema structure
    pixi run init-db
    ```
+   This creates all the tables (`documents`, `keywords`, `key_findings`, `category_scores`), indexes for fast searching, and database views.
+
+4. **Verify Setup**:
+   ```bash
+   # Check that everything is working
+   pixi run db-stats
+   ```
+   Should show "Total Documents: 0" confirming the database is ready.
+
+**Troubleshooting Setup**:
+```bash
+# Check if PostgreSQL is running
+pg_isready
+
+# List all databases (should include pdf_summarizer after step 2)
+psql -l
+
+# Check if tables exist (should show tables after step 3)
+psql -d pdf_summarizer -c "\dt"
+```
 
 ### Database Schema
 
