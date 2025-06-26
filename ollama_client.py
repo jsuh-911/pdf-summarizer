@@ -90,6 +90,8 @@ Return ONLY a valid JSON object with these fields:
   "Title": "Document title or main topic",
   "Author(s)": "Primary author(s) if available, or 'Not specified'",
   "Year Published": "Year if available, or null",
+  "Journal": "Journal or publication venue if available, or 'Not specified'",
+  "BibTeX Citation": "Generate a proper BibTeX entry in this format: @article{{AuthorYear,\\n  title={{Title}},\\n  author={{Author Name}},\\n  journal={{Journal Name}},\\n  year={{Year}},\\n  note={{Extracted from PDF}}\\n}}",
   "Type": "Document type (research paper, book, report, etc.)",
   "Categories": ["category1", "category2"],
   "Sample Size": "Study size if applicable, or 'Not applicable'",

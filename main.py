@@ -35,7 +35,10 @@ def process(pdf_path: str, model: str, no_llm_keywords: bool):
             console.print(f"\n[bold green]Structured Summary:[/bold green]")
             for key, value in summary.items():
                 if key != "error":
-                    if isinstance(value, dict):
+                    if key == "BibTeX Citation":
+                        console.print(f"\n[cyan]{key}:[/cyan]")
+                        console.print(f"[dim]{value}[/dim]")
+                    elif isinstance(value, dict):
                         console.print(f"\n[cyan]{key}:[/cyan]")
                         for sub_key, sub_value in value.items():
                             console.print(f"  • {sub_key}: {sub_value}")

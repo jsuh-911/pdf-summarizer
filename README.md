@@ -171,6 +171,8 @@ For each processed PDF, the application creates:
     "Title": "Document title or main topic",
     "Author(s)": "Primary author(s)",
     "Year Published": 2024,
+    "Journal": "Journal or publication venue",
+    "BibTeX Citation": "@article{AuthorYear,\n  title={Title},\n  author={Author Name},\n  journal={Journal Name},\n  year={2024},\n  note={Extracted from PDF}\n}",
     "Type": "research paper",
     "Categories": ["category1", "category2"],
     "Sample Size": "Study size if applicable",

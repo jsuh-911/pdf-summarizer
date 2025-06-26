@@ -187,6 +187,12 @@ class PDFSummarizer:
                         report += f"**Title:** {summary['Title']}\n\n"
                     if 'Author(s)' in summary:
                         report += f"**Author(s):** {summary['Author(s)']}\n\n"
+                    if 'Year Published' in summary:
+                        report += f"**Year:** {summary['Year Published']}\n\n"
+                    if 'Journal' in summary:
+                        report += f"**Journal:** {summary['Journal']}\n\n"
+                    if 'BibTeX Citation' in summary:
+                        report += f"**BibTeX Citation:**\n```\n{summary['BibTeX Citation']}\n```\n\n"
                     if 'Type' in summary:
                         report += f"**Type:** {summary['Type']}\n\n"
                     if 'Method' in summary:
