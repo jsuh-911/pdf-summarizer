@@ -45,12 +45,15 @@ class PDFSummarizer:
         metadata = pdf_data['metadata']
         
         # Generate summary
-        self.console.print("[yellow]Generating summary...[/yellow]")
-        summary = self.ollama_client.generate_summary(text, "blinkist")
+        self.console.print("[yellow]Generating structured summary...[/yellow]")
+        summary_result = self.ollama_client.generate_summary(text, "structured")
         
-        if not summary:
-            self.console.print("[red]Failed to generate summary[/red]")
-            return None
+        if "error" in summary_result:
+            self.console.print(f"[red]Failed to generate summary: {summary_result['error']}[/red]")
+            # Fallback to raw response if available
+            summary = summary_result.get("raw_response", "Failed to generate summary")
+        else:
+            summary = summary_result
         
         # Extract keywords
         self.console.print("[yellow]Extracting keywords...[/yellow]")
@@ -176,7 +179,29 @@ class PDFSummarizer:
                 title = result['metadata'].get('title') or result['metadata']['filename']
                 report += f"### {title}\n\n"
                 report += f"**Keywords:** {', '.join(result['keywords'][:8])}\n\n"
-                report += f"{result['summary']}\n\n"
+                
+                summary = result['summary']
+                if isinstance(summary, dict):
+                    # Format structured summary
+                    if 'Title' in summary:
+                        report += f"**Title:** {summary['Title']}\n\n"
+                    if 'Author(s)' in summary:
+                        report += f"**Author(s):** {summary['Author(s)']}\n\n"
+                    if 'Type' in summary:
+                        report += f"**Type:** {summary['Type']}\n\n"
+                    if 'Method' in summary:
+                        report += f"**Method:** {summary['Method']}\n\n"
+                    if 'Key Findings' in summary:
+                        report += f"**Key Findings:**\n"
+                        for finding, description in summary['Key Findings'].items():
+                            report += f"- {finding}: {description}\n"
+                        report += "\n"
+                    if 'Key Takeaways' in summary:
+                        report += f"**Key Takeaways:** {summary['Key Takeaways']}\n\n"
+                else:
+                    # Fallback to text summary
+                    report += f"{summary}\n\n"
+                
                 report += "---\n\n"
         
         # Save report

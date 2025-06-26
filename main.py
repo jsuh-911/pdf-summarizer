@@ -30,7 +30,21 @@ def process(pdf_path: str, model: str, no_llm_keywords: bool):
     
     if result:
         summarizer.display_results([result])
-        console.print(f"\n[bold green]Summary:[/bold green]\n{result['summary']}")
+        summary = result['summary']
+        if isinstance(summary, dict):
+            console.print(f"\n[bold green]Structured Summary:[/bold green]")
+            for key, value in summary.items():
+                if key != "error":
+                    if isinstance(value, dict):
+                        console.print(f"\n[cyan]{key}:[/cyan]")
+                        for sub_key, sub_value in value.items():
+                            console.print(f"  • {sub_key}: {sub_value}")
+                    elif isinstance(value, list):
+                        console.print(f"\n[cyan]{key}:[/cyan] {', '.join(map(str, value))}")
+                    else:
+                        console.print(f"\n[cyan]{key}:[/cyan] {value}")
+        else:
+            console.print(f"\n[bold green]Summary:[/bold green]\n{summary}")
     else:
         console.print("[red]Failed to process PDF[/red]")
 
@@ -130,6 +144,44 @@ def models():
             
     except Exception as e:
         console.print(f"[red]Error listing models:[/red] {e}")
+
+@cli.command()
+@click.argument('examples_dir', type=click.Path(exists=True, file_okay=False, dir_okay=True))
+def show_examples(examples_dir: str):
+    """Show example JSON structure from examples directory"""
+    import json
+    from pathlib import Path
+    
+    example_files = list(Path(examples_dir).glob('*.json'))
+    
+    if not example_files:
+        console.print(f"[red]No JSON files found in {examples_dir}[/red]")
+        return
+    
+    console.print(f"[bold]Found {len(example_files)} example files:[/bold]")
+    
+    for file_path in example_files[:3]:  # Show first 3 examples
+        console.print(f"\n[cyan]File: {file_path.name}[/cyan]")
+        try:
+            with open(file_path, 'r') as f:
+                data = json.load(f)
+            
+            for key, value in data.items():
+                if isinstance(value, dict):
+                    console.print(f"[yellow]{key}:[/yellow]")
+                    for sub_key, sub_value in list(value.items())[:3]:  # First 3 items
+                        console.print(f"  • {sub_key}: {sub_value}")
+                    if len(value) > 3:
+                        console.print(f"  ... and {len(value) - 3} more")
+                elif isinstance(value, list):
+                    console.print(f"[yellow]{key}:[/yellow] {', '.join(map(str, value))}")
+                else:
+                    display_value = str(value)
+                    if len(display_value) > 100:
+                        display_value = display_value[:100] + "..."
+                    console.print(f"[yellow]{key}:[/yellow] {display_value}")
+        except Exception as e:
+            console.print(f"[red]Error reading {file_path.name}: {e}[/red]")
 
 @cli.command()
 @click.option('--key', required=True, help='Configuration key')

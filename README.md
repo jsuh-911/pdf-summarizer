@@ -5,7 +5,7 @@ A Python application that uses local LLMs through Ollama to create Blinkist-styl
 ## Features
 
 - **PDF Text Extraction**: Extract text from PDFs using PyPDF2 and pdfplumber
-- **Blinkist-style Summaries**: Generate structured summaries with key insights
+- **Structured JSON Summaries**: Generate scientific paper-style structured summaries with key findings, methodology, and takeaways
 - **Keyword Extraction**: Extract keywords using both LLM and TF-IDF methods
 - **Content Categorization**: Automatically categorize PDFs into topics (business, technology, self-help, etc.)
 - **Batch Processing**: Process multiple PDFs in a directory
@@ -131,6 +131,11 @@ pixi run models
 pixi run python main.py config --key OLLAMA_MODEL --value mistral
 ```
 
+### View example output format
+```bash
+pixi run python main.py show-examples /path/to/examples
+```
+
 ## Categories
 
 The application automatically categorizes content into these categories:
@@ -158,11 +163,26 @@ For each processed PDF, the application creates:
 {
   "metadata": {
     "title": "Document Title",
-    "author": "Author Name",
+    "author": "Author Name", 
     "filename": "document.pdf",
     "pages": 250
   },
-  "summary": "Blinkist-style summary with key insights...",
+  "summary": {
+    "Title": "Document title or main topic",
+    "Author(s)": "Primary author(s)",
+    "Year Published": 2024,
+    "Type": "research paper",
+    "Categories": ["category1", "category2"],
+    "Sample Size": "Study size if applicable",
+    "Method": "Methodology or approach",
+    "Key Findings": {
+      "Finding 1": "Description with direction ↑/↓",
+      "Finding 2": "Description with impact",
+      "Finding 3": "Statistical results"
+    },
+    "Prediction Model": "yes/no",
+    "Key Takeaways": "Comprehensive summary covering insights, implications, and significance..."
+  },
   "keywords": ["keyword1", "keyword2", ...],
   "categories": {
     "business": 0.8,

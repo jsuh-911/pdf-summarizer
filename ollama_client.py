@@ -40,9 +40,9 @@ class OllamaClient:
             print(f"Error checking model availability: {e}")
             return False
     
-    def generate_summary(self, text: str, summary_type: str = "blinkist") -> str:
+    def generate_summary(self, text: str, summary_type: str = "structured") -> dict:
         """Generate a summary using Ollama"""
-        if summary_type == "blinkist":
+        if summary_type == "structured":
             prompt = self._create_blinkist_prompt(text)
         else:
             prompt = self._create_standard_prompt(text)
@@ -52,49 +52,66 @@ class OllamaClient:
                 model=self.model,
                 prompt=prompt,
                 options={
-                    'temperature': 0.7,
+                    'temperature': 0.3,
                     'top_p': 0.9,
-                    'max_tokens': 1000
+                    'max_tokens': 1500
                 }
             )
-            return response['response'].strip()
+            
+            response_text = response['response'].strip()
+            
+            if summary_type == "structured":
+                # Try to parse JSON response
+                try:
+                    # Extract JSON from response if it contains other text
+                    if '{' in response_text and '}' in response_text:
+                        start = response_text.find('{')
+                        end = response_text.rfind('}') + 1
+                        json_text = response_text[start:end]
+                        return json.loads(json_text)
+                    else:
+                        return {"error": "No JSON found in response", "raw_response": response_text}
+                except json.JSONDecodeError as e:
+                    return {"error": f"JSON parse error: {e}", "raw_response": response_text}
+            else:
+                return {"summary": response_text}
+                
         except Exception as e:
             print(f"Error generating summary: {e}")
-            return ""
+            return {"error": str(e)}
     
     def _create_blinkist_prompt(self, text: str) -> str:
-        """Create a Blinkist-style summary prompt"""
+        """Create a structured summary prompt based on scientific paper format"""
         return f"""
-Create a Blinkist-style summary of the following text. Your summary should:
+Create a structured summary of the following text in JSON format. Extract the key information and format it as follows:
 
-1. Start with a brief "What's in it for me?" section (2-3 sentences)
-2. Extract 5-7 key insights or "blinks" from the content
-3. Each blink should be:
-   - A clear, actionable insight
-   - 2-3 sentences long
-   - Include the main idea and why it matters
-4. End with a "Final Summary" paragraph
+Return ONLY a valid JSON object with these fields:
+{{
+  "Title": "Document title or main topic",
+  "Author(s)": "Primary author(s) if available, or 'Not specified'",
+  "Year Published": "Year if available, or null",
+  "Type": "Document type (research paper, book, report, etc.)",
+  "Categories": ["category1", "category2"],
+  "Sample Size": "Study size if applicable, or 'Not applicable'",
+  "Method": "Methodology or approach described in the text",
+  "Key Findings": {{
+    "Finding 1": "Description with direction/impact",
+    "Finding 2": "Description with direction/impact",
+    "Finding 3": "Description with direction/impact"
+  }},
+  "Prediction Model": "yes/no - whether a predictive model was developed",
+  "Key Takeaways": "Comprehensive summary paragraph covering main insights, implications, and significance of the work. Include specific details, numbers, and conclusions. Make this 3-5 sentences covering the most important aspects."
+}}
 
-Format your response as:
+Guidelines:
+- Extract specific numbers, percentages, and quantitative results when available
+- Use ↑ (increased), ↓ (decreased), or → (associated with) symbols in findings when describing directional changes
+- If information is not available, use "Not specified" or "Not applicable"
+- Make the Key Takeaways section comprehensive and informative
+- Focus on actionable insights and significant conclusions
 
-**What's in it for me?**
-[Brief overview of main benefits]
-
-**Key Insights:**
-
-**Insight 1: [Title]**
-[Description and importance]
-
-**Insight 2: [Title]**
-[Description and importance]
-
-[Continue for 5-7 insights]
-
-**Final Summary:**
-[Concluding thoughts and main takeaway]
-
-Text to summarize:
-{text[:3000]}...
+Text to analyze:
+{text[:4000]}...
 """
     
     def _create_standard_prompt(self, text: str) -> str:
