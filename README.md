@@ -148,16 +148,13 @@ pixi run python main.py test-filenames
 
 ## Categories
 
-The application automatically categorizes content into these categories:
+The application automatically categorizes research content into these study types:
 
-- **Business**: Management, leadership, strategy, marketing
-- **Technology**: Programming, AI, data science, software
-- **Self-help**: Productivity, habits, personal development
-- **Science**: Research, biology, physics, psychology
-- **Finance**: Investing, economics, trading, wealth
-- **Health**: Fitness, nutrition, wellness, medicine
-- **History**: Historical events, politics, society
-- **Philosophy**: Ethics, thinking, wisdom, meaning
+- **Clinical Trial**: Human clinical trials, RCTs, therapeutic interventions, patient studies
+- **Preclinical Models**: Animal studies, in vivo experiments, disease models, pharmacokinetics
+- **Cellular Studies**: In vitro studies, cell culture, molecular biology, gene expression
+- **Meta Analysis**: Systematic reviews, pooled analyses, evidence synthesis
+- **Review Article**: Literature reviews, perspectives, commentaries, overviews
 
 ## Output
 
@@ -187,7 +184,7 @@ All JSON files are automatically saved to the `./summaries/` directory.
     "Journal": "Journal or publication venue",
     "BibTeX Citation": "@article{AuthorYear,\n  title={Title},\n  author={Author Name},\n  journal={Journal Name},\n  year={2024},\n  note={Extracted from PDF}\n}",
     "Type": "research paper",
-    "Categories": ["category1", "category2"],
+    "Categories": ["preclinical_models", "cellular_studies"],
     "Sample Size": "Study size if applicable",
     "Method": "Methodology or approach",
     "Key Findings": {
@@ -200,11 +197,13 @@ All JSON files are automatically saved to the `./summaries/` directory.
   },
   "keywords": ["keyword1", "keyword2", ...],
   "categories": {
-    "business": 0.8,
-    "technology": 0.3,
-    ...
+    "preclinical_models": 0.8,
+    "cellular_studies": 0.3,
+    "clinical_trial": 0.1,
+    "meta_analysis": 0.0,
+    "review_article": 0.0
   },
-  "primary_category": "business",
+  "primary_category": "preclinical_models",
   "word_count": 15000,
   "processed_at": "2024-01-15T10:30:00"
 }

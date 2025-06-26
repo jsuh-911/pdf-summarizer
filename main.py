@@ -221,7 +221,7 @@ def test_json():
             "Journal": "Journal of Document Processing",
             "BibTeX Citation": "@article{Author2024,\n  title={Sample Research Paper on PDF Processing},\n  author={Test Author and Co-Author},\n  journal={Journal of Document Processing},\n  year={2024},\n  note={Extracted from PDF}\n}",
             "Type": "research paper",
-            "Categories": ["technology", "research"],
+            "Categories": ["preclinical_models", "cellular_studies"],
             "Sample Size": "100 documents",
             "Method": "Automated text extraction and LLM processing",
             "Key Findings": {
@@ -234,11 +234,13 @@ def test_json():
         },
         "extracted_keywords": ["pdf", "processing", "llm", "json", "extraction"],
         "categorization": {
-            "primary_category": "technology",
+            "primary_category": "preclinical_models",
             "category_scores": {
-                "technology": 0.9,
-                "science": 0.3,
-                "business": 0.1
+                "preclinical_models": 0.9,
+                "cellular_studies": 0.3,
+                "clinical_trial": 0.1,
+                "meta_analysis": 0.0,
+                "review_article": 0.0
             }
         },
         "document_stats": {

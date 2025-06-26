@@ -92,16 +92,13 @@ class TextCategorizer:
         return normalized_scores
     
     def categorize_by_similarity(self, text: str) -> Dict[str, float]:
-        """Categorize content using cosine similarity with category descriptions"""
+        """Categorize content using cosine similarity with research category descriptions"""
         category_descriptions = {
-            'business': 'business management leadership strategy marketing sales entrepreneurship company organization',
-            'technology': 'technology programming software artificial intelligence machine learning data science coding computer',
-            'self_help': 'self help productivity habits mindset personal development motivation improvement growth',
-            'science': 'science research biology physics chemistry neuroscience psychology scientific study experiment',
-            'finance': 'finance investing money economics trading wealth financial investment market banking',
-            'health': 'health fitness nutrition wellness medicine exercise diet medical healthcare treatment',
-            'history': 'history historical war politics government society culture past events civilization',
-            'philosophy': 'philosophy ethics morality thinking wisdom meaning purpose philosophical thought reasoning'
+            'clinical_trial': 'clinical trial randomized controlled trial RCT human participants intervention treatment placebo double blind efficacy safety therapeutic',
+            'preclinical_models': 'animal model mouse rat transgenic knockout in vivo preclinical experimental disease model behavioral pharmacokinetics toxicity',
+            'cellular_studies': 'cell culture in vitro cell line primary cells stem cells organoid tissue culture gene expression protein western blot flow cytometry',
+            'meta_analysis': 'meta analysis systematic review pooled analysis forest plot heterogeneity odds ratio risk ratio confidence interval cochrane prisma',
+            'review_article': 'review literature review narrative review perspective commentary overview state of the art current understanding recent advances future directions'
         }
         
         try:

@@ -93,7 +93,7 @@ Return ONLY a valid JSON object with these fields:
   "Journal": "Journal or publication venue if available, or 'Not specified'",
   "BibTeX Citation": "Generate a proper BibTeX entry in this format: @article{{AuthorYear,\\n  title={{Title}},\\n  author={{Author Name}},\\n  journal={{Journal Name}},\\n  year={{Year}},\\n  note={{Extracted from PDF}}\\n}}",
   "Type": "Document type (research paper, book, report, etc.)",
-  "Categories": ["category1", "category2"],
+  "Categories": ["clinical_trial", "preclinical_models", "cellular_studies", "meta_analysis", "review_article"],
   "Sample Size": "Study size if applicable, or 'Not applicable'",
   "Method": "Methodology or approach described in the text",
   "Key Findings": {{
@@ -157,20 +157,26 @@ Text:
             return []
     
     def categorize_content(self, text: str, keywords: List[str]) -> Dict[str, float]:
-        """Categorize content based on predefined categories"""
+        """Categorize content based on research study types"""
         categories_text = ", ".join(Config.CATEGORIES.keys())
         
         prompt = f"""
-Based on the following text and keywords, assign relevance scores (0-1) for each category.
+Based on the following text and keywords, assign relevance scores (0-1) for each research study category.
 Return your response as a JSON object with category names as keys and scores as values.
 
-Categories: {categories_text}
+Research Study Categories:
+- clinical_trial: Human clinical trials, RCTs, therapeutic interventions
+- preclinical_models: Animal studies, in vivo experiments, disease models
+- cellular_studies: In vitro studies, cell culture, molecular biology
+- meta_analysis: Systematic reviews, pooled analyses, meta-analyses  
+- review_article: Literature reviews, perspectives, commentaries
+
 Keywords: {', '.join(keywords)}
 
 Text sample:
 {text[:1500]}...
 
-Return only the JSON object, no additional text.
+Return only the JSON object with scores 0-1, no additional text.
 """
         
         try:
