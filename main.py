@@ -149,6 +149,74 @@ def models():
         console.print(f"[red]Error listing models:[/red] {e}")
 
 @cli.command()
+def test_json():
+    """Create a test JSON file to verify output format"""
+    from datetime import datetime
+    import json
+    from pathlib import Path
+    
+    # Create test data matching our output format
+    test_data = {
+        "source_file": "test_document.pdf",
+        "processed_at": datetime.now().isoformat(),
+        "pdf_metadata": {
+            "title": "Test Document",
+            "author": "Test Author",
+            "filename": "test_document.pdf",
+            "pages": 10
+        },
+        "structured_summary": {
+            "Title": "Sample Research Paper on PDF Processing",
+            "Author(s)": "Test Author, Co-Author",
+            "Year Published": 2024,
+            "Journal": "Journal of Document Processing",
+            "BibTeX Citation": "@article{Author2024,\n  title={Sample Research Paper on PDF Processing},\n  author={Test Author and Co-Author},\n  journal={Journal of Document Processing},\n  year={2024},\n  note={Extracted from PDF}\n}",
+            "Type": "research paper",
+            "Categories": ["technology", "research"],
+            "Sample Size": "100 documents",
+            "Method": "Automated text extraction and LLM processing",
+            "Key Findings": {
+                "Finding 1": "PDF processing accuracy ↑ 95% with structured prompts",
+                "Finding 2": "Processing time ↓ 60% with optimized chunking", 
+                "Finding 3": "JSON output → improved data usability"
+            },
+            "Prediction Model": "no",
+            "Key Takeaways": "This study demonstrates effective PDF-to-JSON conversion using local LLMs. The structured approach significantly improves accuracy and processing speed while maintaining comprehensive data extraction. Results show promise for large-scale document processing applications."
+        },
+        "extracted_keywords": ["pdf", "processing", "llm", "json", "extraction"],
+        "categorization": {
+            "primary_category": "technology",
+            "category_scores": {
+                "technology": 0.9,
+                "science": 0.3,
+                "business": 0.1
+            }
+        },
+        "document_stats": {
+            "word_count": 1500,
+            "processing_timestamp": datetime.now().isoformat()
+        }
+    }
+    
+    # Ensure summaries directory exists
+    output_dir = Path("./summaries")
+    output_dir.mkdir(exist_ok=True)
+    
+    # Save test files
+    test_path = output_dir / "test_document_summary.json"
+    simple_path = output_dir / "test_document_simple.json"
+    
+    with open(test_path, 'w', encoding='utf-8') as f:
+        json.dump(test_data, f, indent=2, ensure_ascii=False)
+    
+    with open(simple_path, 'w', encoding='utf-8') as f:
+        json.dump(test_data["structured_summary"], f, indent=2, ensure_ascii=False)
+    
+    console.print(f"[green]Test JSON files created:[/green]")
+    console.print(f"  Full format: {test_path}")
+    console.print(f"  Simple format: {simple_path}")
+
+@cli.command()
 @click.argument('examples_dir', type=click.Path(exists=True, file_okay=False, dir_okay=True))
 def show_examples(examples_dir: str):
     """Show example JSON structure from examples directory"""

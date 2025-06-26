@@ -136,6 +136,11 @@ pixi run python main.py config --key OLLAMA_MODEL --value mistral
 pixi run python main.py show-examples /path/to/examples
 ```
 
+### Test JSON output format
+```bash
+pixi run python main.py test-json
+```
+
 ## Categories
 
 The application automatically categorizes content into these categories:
@@ -153,9 +158,12 @@ The application automatically categorizes content into these categories:
 
 For each processed PDF, the application creates:
 
-1. **JSON Summary File**: Complete processing results with metadata
-2. **Console Display**: Formatted table with key information
-3. **Markdown Report** (optional): Organized by category
+1. **Full JSON Summary File** (`{filename}_summary.json`): Complete processing results with metadata, categorization, and document stats
+2. **Simple JSON File** (`{filename}_simple.json`): Clean format matching research paper examples (Title, Author, BibTeX, Key Findings, etc.)
+3. **Console Display**: Formatted table with key information
+4. **Markdown Report** (optional): Organized by category
+
+All JSON files are automatically saved to the `./summaries/` directory.
 
 ### Example Output Structure
 
@@ -263,6 +271,25 @@ pixi run setup
 # Use predefined tasks
 pixi run example-single  # Process example.pdf
 pixi run example-batch   # Process ./pdfs directory
+
+# Test JSON output functionality
+pixi run test-json       # Create sample JSON files
+```
+
+## Output Files
+
+Each PDF processed will create two JSON files in the `./summaries/` directory:
+
+- `document_summary.json` - Full format with metadata and categorization
+- `document_simple.json` - Clean format matching research examples
+
+Example directory structure after processing:
+```
+summaries/
+├── research_paper_summary.json
+├── research_paper_simple.json
+├── book_chapter_summary.json
+└── book_chapter_simple.json
 ```
 
 ## Pixi Tasks Reference

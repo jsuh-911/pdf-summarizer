@@ -98,6 +98,9 @@ class PDFSummarizer:
             'processed_at': datetime.now().isoformat()
         }
         
+        # Always save the result to JSON file
+        self.save_result(result, pdf_path)
+        
         return result
     
     def process_multiple_pdfs(self, pdf_paths: List[str], use_llm_keywords: bool = True) -> List[Dict]:
@@ -114,13 +117,46 @@ class PDFSummarizer:
     
     def save_result(self, result: Dict, original_path: str):
         """Save processing result to JSON file"""
+        # Ensure summaries directory exists
+        self.output_dir.mkdir(exist_ok=True)
+        
+        # Create filename based on original PDF
         filename = Path(original_path).stem + "_summary.json"
         output_path = self.output_dir / filename
         
-        with open(output_path, 'w', encoding='utf-8') as f:
-            json.dump(result, f, indent=2, ensure_ascii=False)
+        # Create a clean output structure
+        output_data = {
+            "source_file": str(Path(original_path).name),
+            "processed_at": result['processed_at'],
+            "pdf_metadata": result['metadata'],
+            "structured_summary": result['summary'],
+            "extracted_keywords": result['keywords'],
+            "categorization": {
+                "primary_category": result['primary_category'],
+                "category_scores": result['categories']
+            },
+            "document_stats": {
+                "word_count": result['word_count'],
+                "processing_timestamp": result['processed_at']
+            }
+        }
         
-        self.console.print(f"[green]Saved:[/green] {output_path}")
+        # Save with proper formatting
+        with open(output_path, 'w', encoding='utf-8') as f:
+            json.dump(output_data, f, indent=2, ensure_ascii=False)
+        
+        self.console.print(f"[green]JSON Summary Saved:[/green] {output_path}")
+        
+        # Also create a simplified version matching the examples format
+        if isinstance(result['summary'], dict):
+            simple_output = result['summary'].copy()
+            simple_filename = Path(original_path).stem + "_simple.json"
+            simple_path = self.output_dir / simple_filename
+            
+            with open(simple_path, 'w', encoding='utf-8') as f:
+                json.dump(simple_output, f, indent=2, ensure_ascii=False)
+            
+            self.console.print(f"[green]Simple Format Saved:[/green] {simple_path}")
     
     def display_results(self, results: List[Dict]):
         """Display results in a formatted table"""
