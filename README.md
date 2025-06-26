@@ -319,6 +319,30 @@ DB_USER=postgres
 DB_PASSWORD=your_password
 ```
 
+### Database Location
+
+The PostgreSQL database files are stored in:
+- **Homebrew (macOS)**: `/opt/homebrew/var/postgresql@XX/`
+- **Linux**: `/var/lib/postgresql/data/`
+- **Manual install**: Check with `psql -c "SHOW data_directory;"`
+
+### Sync Existing JSON Files
+
+If you have existing JSON files in the summaries folder, sync them to the database:
+
+```bash
+# Sync all JSON files from summaries folder (avoids duplicates)
+pixi run sync-db
+
+# Or specify custom summaries directory
+pixi run python main.py sync-db --summaries-dir /path/to/summaries
+```
+
+**Duplicate Prevention**:
+- Checks `source_file` field to avoid adding the same document twice
+- Skips files already in database
+- Shows summary of added/skipped/error counts
+
 ## Categories
 
 The application automatically categorizes research content into these study types:

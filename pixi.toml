@@ -33,6 +33,7 @@ test-filenames = { cmd = "python main.py test-filenames", cwd = ".", description
 init-db = { cmd = "python main.py init-db", cwd = ".", description = "Initialize PostgreSQL database" }
 db-search = { cmd = "python main.py search", cwd = ".", description = "Search documents in database" }
 db-stats = { cmd = "python main.py stats", cwd = ".", description = "Show database statistics" }
+sync-db = { cmd = "python main.py sync-db", cwd = ".", description = "Sync summaries folder to database (no duplicates)" }
 
 [tasks.install-ollama]
 cmd = "bash -c 'if command -v ollama >/dev/null 2>&1; then echo \"Ollama already installed\"; else echo \"Installing Ollama...\"; if [ \"$(uname)\" = \"Darwin\" ]; then if command -v brew >/dev/null 2>&1; then brew install ollama; else echo \"Please install Ollama from https://ollama.ai\"; fi; elif [ \"$(uname)\" = \"Linux\" ]; then curl -fsSL https://ollama.ai/install.sh | sh; else echo \"Please install Ollama from https://ollama.ai\"; fi; fi'"

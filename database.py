@@ -276,6 +276,63 @@ class DatabaseManager:
         result = self.execute_query(query, (doc_id,), fetch=True)
         return result[0] if result else None
     
+    def document_exists(self, source_file: str) -> bool:
+        """Check if a document already exists in the database"""
+        query = "SELECT id FROM documents WHERE source_file = %s LIMIT 1"
+        result = self.execute_query(query, (source_file,), fetch=True)
+        return len(result) > 0 if result else False
+    
+    def sync_from_summaries_folder(self, summaries_dir: str) -> Dict[str, int]:
+        """Sync JSON files from summaries folder to database, avoiding duplicates"""
+        from pathlib import Path
+        import json
+        
+        summaries_path = Path(summaries_dir)
+        if not summaries_path.exists():
+            console.print(f"[red]Summaries directory not found: {summaries_dir}[/red]")
+            return {"added": 0, "skipped": 0, "errors": 0}
+        
+        # Find all _summary.json files (not _simple.json)
+        summary_files = list(summaries_path.glob("*_summary.json"))
+        
+        stats = {"added": 0, "skipped": 0, "errors": 0}
+        
+        console.print(f"[blue]Scanning {len(summary_files)} summary files...[/blue]")
+        
+        for json_file in summary_files:
+            try:
+                # Load JSON data
+                with open(json_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                
+                source_file = data.get('source_file', json_file.stem.replace('_summary', '.pdf'))
+                
+                # Check if already exists
+                if self.document_exists(source_file):
+                    console.print(f"[yellow]Skipping existing:[/yellow] {source_file}")
+                    stats["skipped"] += 1
+                    continue
+                
+                # Insert new document
+                doc_id = self.insert_document(data)
+                if doc_id:
+                    console.print(f"[green]Added:[/green] {source_file} (ID: {doc_id})")
+                    stats["added"] += 1
+                else:
+                    console.print(f"[red]Failed to add:[/red] {source_file}")
+                    stats["errors"] += 1
+                    
+            except Exception as e:
+                console.print(f"[red]Error processing {json_file.name}: {e}[/red]")
+                stats["errors"] += 1
+        
+        console.print(f"\n[bold]Sync Summary:[/bold]")
+        console.print(f"  Added: [green]{stats['added']}[/green]")
+        console.print(f"  Skipped: [yellow]{stats['skipped']}[/yellow]")
+        console.print(f"  Errors: [red]{stats['errors']}[/red]")
+        
+        return stats
+    
     def close(self):
         """Close database connection pool"""
         if self.pool:

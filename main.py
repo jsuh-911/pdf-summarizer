@@ -428,6 +428,32 @@ def stats():
             console.print(f"  {journal}: {count}")
 
 @cli.command()
+@click.option('--summaries-dir', default='./summaries', help='Summaries directory path')
+def sync_db(summaries_dir: str):
+    """Sync JSON files from summaries folder to database (no duplicates)"""
+    from database import DatabaseManager
+    from pathlib import Path
+    
+    db_manager = DatabaseManager()
+    if not db_manager.pool:
+        console.print("[red]Database not connected[/red]")
+        console.print("Make sure PostgreSQL is running and database is initialized:")
+        console.print("  createdb pdf_summarizer")
+        console.print("  pixi run init-db")
+        return
+    
+    summaries_path = Path(summaries_dir)
+    if not summaries_path.exists():
+        console.print(f"[red]Summaries directory not found: {summaries_dir}[/red]")
+        return
+    
+    console.print(f"[blue]Syncing summaries from: {summaries_path.absolute()}[/blue]")
+    stats = db_manager.sync_from_summaries_folder(summaries_dir)
+    
+    if stats["added"] > 0:
+        console.print(f"\n[green]Successfully added {stats['added']} new documents to database![/green]")
+
+@cli.command()
 @click.argument('doc_id', type=int)
 def show(doc_id: int):
     """Show detailed document information"""

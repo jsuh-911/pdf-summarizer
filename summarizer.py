@@ -109,9 +109,14 @@ class PDFSummarizer:
         # Save to database if enabled
         if self.use_database and self.db_manager:
             try:
-                doc_id = self.db_manager.insert_document(result)
-                if doc_id:
-                    result['database_id'] = doc_id
+                # Check if document already exists
+                source_file = result['metadata']['filename']
+                if self.db_manager.document_exists(source_file):
+                    self.console.print(f"[yellow]Document already in database:[/yellow] {source_file}")
+                else:
+                    doc_id = self.db_manager.insert_document(result)
+                    if doc_id:
+                        result['database_id'] = doc_id
             except Exception as e:
                 self.console.print(f"[yellow]Warning: Could not save to database: {e}[/yellow]")
         
