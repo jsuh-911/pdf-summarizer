@@ -234,6 +234,9 @@ psql -l
 
 # Check if tables exist (should show tables after step 3)
 psql -d pdf_summarizer -c "\dt"
+
+# If you get psycopg2 installation errors, make sure you have psycopg2-binary:
+pip install psycopg2-binary  # NOT psycopg2
 ```
 
 ### Database Schema
@@ -342,6 +345,13 @@ pixi run python main.py sync-db --summaries-dir /path/to/summaries
 - Checks `source_file` field to avoid adding the same document twice
 - Skips files already in database
 - Shows summary of added/skipped/error counts
+
+### PostgreSQL Driver
+
+The project uses `psycopg2-binary` for PostgreSQL connectivity:
+- **Pre-compiled binary** - no build tools required
+- **No pg_config needed** - avoids PostgreSQL development headers
+- **Easy installation** - works on all platforms without compilation
 
 ## Categories
 
