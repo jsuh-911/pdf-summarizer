@@ -146,6 +146,131 @@ pixi run python main.py test-json
 pixi run python main.py test-filenames
 ```
 
+### Database Operations
+```bash
+# Initialize PostgreSQL database
+pixi run init-db
+
+# Search documents
+pixi run python main.py search --query "metabolomics" --category "clinical_trial"
+
+# Show database statistics  
+pixi run db-stats
+
+# View specific document
+pixi run python main.py show 1
+```
+
+## PostgreSQL Database Integration
+
+The application includes full PostgreSQL database integration for organizing and searching processed documents.
+
+### Database Setup
+
+1. **Install PostgreSQL**:
+   ```bash
+   # macOS with Homebrew
+   brew install postgresql
+   brew services start postgresql
+   
+   # Ubuntu/Debian
+   sudo apt install postgresql postgresql-contrib
+   sudo systemctl start postgresql
+   ```
+
+2. **Create Database**:
+   ```bash
+   createdb pdf_summarizer
+   ```
+
+3. **Initialize Schema**:
+   ```bash
+   pixi run init-db
+   ```
+
+### Database Schema
+
+The database stores documents across multiple related tables:
+
+- **`documents`**: Main document information (title, authors, year, journal, etc.)
+- **`keywords`**: Extracted keywords (many-to-many with documents)
+- **`key_findings`**: Research findings (one-to-many with documents)  
+- **`category_scores`**: Categorization scores (one-to-many with documents)
+
+### Search and Query Features
+
+**Text Search**:
+```bash
+pixi run python main.py search --query "Parkinson's disease"
+```
+
+**Filter by Category**:
+```bash
+pixi run python main.py search --category "clinical_trial"
+```
+
+**Filter by Year Range**:
+```bash
+pixi run python main.py search --year-from 2020 --year-to 2024
+```
+
+**Filter by Author**:
+```bash
+pixi run python main.py search --author "Loeffler"
+```
+
+**Filter by Journal**:
+```bash
+pixi run python main.py search --journal "Nature"
+```
+
+**Combined Filters**:
+```bash
+pixi run python main.py search \
+  --query "metabolomics biomarkers" \
+  --category "preclinical_models" \
+  --year-from 2022 \
+  --limit 20
+```
+
+### Database Statistics
+
+View comprehensive statistics:
+```bash
+pixi run db-stats
+```
+
+Shows:
+- Total documents count
+- Distribution by research category
+- Distribution by publication year
+- Top journals by document count
+
+### Document Management
+
+**View Detailed Document**:
+```bash
+pixi run python main.py show 5
+```
+
+Displays complete document information including:
+- Metadata (title, authors, year, journal)
+- Research categorization
+- Keywords and key findings
+- Full key takeaways text
+
+### Configuration
+
+Database settings in `.env`:
+```bash
+DATABASE_URL=postgresql://localhost/pdf_summarizer
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=pdf_summarizer
+DB_USER=postgres
+DB_PASSWORD=your_password
+```
+
 ## Categories
 
 The application automatically categorizes research content into these study types:

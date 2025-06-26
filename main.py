@@ -311,6 +311,160 @@ def show_examples(examples_dir: str):
             console.print(f"[red]Error reading {file_path.name}: {e}[/red]")
 
 @cli.command()
+def init_db():
+    """Initialize the PostgreSQL database"""
+    import subprocess
+    from pathlib import Path
+    from database import DatabaseManager
+    
+    schema_path = Path("database_schema.sql")
+    if not schema_path.exists():
+        console.print("[red]database_schema.sql not found[/red]")
+        return
+    
+    console.print("[blue]Initializing PostgreSQL database...[/blue]")
+    
+    try:
+        # Try to connect to check if database exists
+        db_manager = DatabaseManager()
+        if db_manager.pool:
+            console.print("[green]Database connection successful[/green]")
+            
+            # Execute schema
+            with open(schema_path, 'r') as f:
+                schema = f.read()
+            
+            conn = db_manager.get_connection()
+            if conn:
+                with conn.cursor() as cur:
+                    cur.execute(schema)
+                conn.commit()
+                db_manager.return_connection(conn)
+                
+                console.print("[green]Database schema created successfully[/green]")
+            else:
+                console.print("[red]Could not get database connection[/red]")
+        else:
+            console.print("[red]Could not connect to database[/red]")
+            console.print("Make sure PostgreSQL is running and database 'pdf_summarizer' exists")
+            console.print("Create database with: createdb pdf_summarizer")
+            
+    except Exception as e:
+        console.print(f"[red]Database initialization error: {e}[/red]")
+
+@cli.command()
+@click.option('--query', '-q', help='Text search query')
+@click.option('--category', '-c', help='Filter by category')
+@click.option('--year-from', type=int, help='Filter by year from')
+@click.option('--year-to', type=int, help='Filter by year to')
+@click.option('--author', '-a', help='Filter by author')
+@click.option('--journal', '-j', help='Filter by journal')
+@click.option('--limit', '-l', type=int, default=10, help='Number of results')
+def search(query: str, category: str, year_from: int, year_to: int, 
+           author: str, journal: str, limit: int):
+    """Search documents in the database"""
+    from database import DatabaseManager
+    
+    db_manager = DatabaseManager()
+    if not db_manager.pool:
+        console.print("[red]Database not connected[/red]")
+        return
+    
+    results = db_manager.search_documents(
+        query=query,
+        category=category,
+        year_from=year_from,
+        year_to=year_to,
+        author=author,
+        journal=journal,
+        limit=limit
+    )
+    
+    if not results:
+        console.print("[yellow]No documents found[/yellow]")
+        return
+    
+    console.print(f"[green]Found {len(results)} documents:[/green]\n")
+    
+    for doc in results:
+        console.print(f"[cyan]ID: {doc['id']}[/cyan] - [bold]{doc['title'] or 'No Title'}[/bold]")
+        console.print(f"  Authors: {doc['authors'] or 'Unknown'}")
+        console.print(f"  Year: {doc['year_published'] or 'Unknown'}")
+        console.print(f"  Journal: {doc['journal'] or 'Unknown'}")
+        console.print(f"  Category: {doc['primary_category']}")
+        console.print(f"  Keywords: {', '.join(doc['keywords']) if doc['keywords'] and doc['keywords'][0] else 'None'}")
+        console.print()
+
+@cli.command()
+def stats():
+    """Show database statistics"""
+    from database import DatabaseManager
+    
+    db_manager = DatabaseManager()
+    if not db_manager.pool:
+        console.print("[red]Database not connected[/red]")
+        return
+    
+    stats = db_manager.get_statistics()
+    
+    console.print("[bold]Database Statistics[/bold]\n")
+    console.print(f"Total Documents: [green]{stats['total_documents']}[/green]\n")
+    
+    if stats['by_category']:
+        console.print("[bold]By Category:[/bold]")
+        for category, count in stats['by_category'].items():
+            console.print(f"  {category}: {count}")
+        console.print()
+    
+    if stats['by_year']:
+        console.print("[bold]By Year (Top 10):[/bold]")
+        for year, count in stats['by_year'].items():
+            console.print(f"  {year}: {count}")
+        console.print()
+    
+    if stats['top_journals']:
+        console.print("[bold]Top Journals:[/bold]")
+        for journal, count in stats['top_journals'].items():
+            console.print(f"  {journal}: {count}")
+
+@cli.command()
+@click.argument('doc_id', type=int)
+def show(doc_id: int):
+    """Show detailed document information"""
+    from database import DatabaseManager
+    
+    db_manager = DatabaseManager()
+    if not db_manager.pool:
+        console.print("[red]Database not connected[/red]")
+        return
+    
+    doc = db_manager.get_document_by_id(doc_id)
+    if not doc:
+        console.print(f"[red]Document with ID {doc_id} not found[/red]")
+        return
+    
+    console.print(f"[bold]{doc['title'] or 'No Title'}[/bold]\n")
+    console.print(f"[cyan]ID:[/cyan] {doc['id']}")
+    console.print(f"[cyan]Authors:[/cyan] {doc['authors'] or 'Unknown'}")
+    console.print(f"[cyan]Year:[/cyan] {doc['year_published'] or 'Unknown'}")
+    console.print(f"[cyan]Journal:[/cyan] {doc['journal'] or 'Unknown'}")
+    console.print(f"[cyan]Category:[/cyan] {doc['primary_category']}")
+    console.print(f"[cyan]Sample Size:[/cyan] {doc['sample_size'] or 'Not specified'}")
+    console.print(f"[cyan]Method:[/cyan] {doc['method'] or 'Not specified'}")
+    
+    if doc['keywords'] and doc['keywords'][0]:
+        console.print(f"[cyan]Keywords:[/cyan] {', '.join(doc['keywords'])}")
+    
+    if doc['key_takeaways']:
+        console.print(f"\n[bold]Key Takeaways:[/bold]\n{doc['key_takeaways']}")
+    
+    if doc['key_findings']:
+        console.print(f"\n[bold]Key Findings:[/bold]")
+        for finding in doc['key_findings']:
+            if finding['name']:
+                console.print(f"  • [yellow]{finding['name']}:[/yellow] {finding['description']}")
+
+@cli.command()
 @click.option('--key', required=True, help='Configuration key')
 @click.option('--value', required=True, help='Configuration value')
 def config(key: str, value: str):

@@ -11,15 +11,20 @@ from pdf_extractor import PDFExtractor
 from ollama_client import OllamaClient
 from categorizer import TextCategorizer
 from config import Config
+from database import DatabaseManager
 
 class PDFSummarizer:
-    def __init__(self, model: str = None):
+    def __init__(self, model: str = None, use_database: bool = True):
         self.console = Console()
         self.pdf_extractor = PDFExtractor()
         self.ollama_client = OllamaClient(model=model)
         self.categorizer = TextCategorizer()
         self.output_dir = Path(Config.OUTPUT_DIR)
         self.output_dir.mkdir(exist_ok=True)
+        
+        # Database integration
+        self.use_database = use_database
+        self.db_manager = DatabaseManager() if use_database else None
         
     def check_ollama_connection(self) -> bool:
         """Check if Ollama is running and model is available"""
@@ -100,6 +105,15 @@ class PDFSummarizer:
         
         # Always save the result to JSON file
         self.save_result(result, pdf_path)
+        
+        # Save to database if enabled
+        if self.use_database and self.db_manager:
+            try:
+                doc_id = self.db_manager.insert_document(result)
+                if doc_id:
+                    result['database_id'] = doc_id
+            except Exception as e:
+                self.console.print(f"[yellow]Warning: Could not save to database: {e}[/yellow]")
         
         return result
     

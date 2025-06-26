@@ -9,6 +9,14 @@ class Config:
     OUTPUT_DIR = os.getenv('OUTPUT_DIR', './summaries')
     MAX_CHUNK_SIZE = int(os.getenv('MAX_CHUNK_SIZE', 4000))
     
+    # Database configuration
+    DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://localhost/pdf_summarizer')
+    DB_HOST = os.getenv('DB_HOST', 'localhost')
+    DB_PORT = int(os.getenv('DB_PORT', 5432))
+    DB_NAME = os.getenv('DB_NAME', 'pdf_summarizer')
+    DB_USER = os.getenv('DB_USER', 'postgres')
+    DB_PASSWORD = os.getenv('DB_PASSWORD', '')
+    
     # Categorization keywords for research studies
     CATEGORIES = {
         'clinical_trial': [
