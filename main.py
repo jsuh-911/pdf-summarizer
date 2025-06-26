@@ -149,6 +149,55 @@ def models():
         console.print(f"[red]Error listing models:[/red] {e}")
 
 @cli.command()
+def test_filenames():
+    """Test filename generation with different author/year combinations"""
+    from summarizer import PDFSummarizer
+    
+    summarizer = PDFSummarizer()
+    
+    test_cases = [
+        {
+            "name": "Single author with year",
+            "result": {"summary": {"Author(s)": "David A. Loeffler", "Year Published": 2019}},
+            "original_path": "/test/document.pdf"
+        },
+        {
+            "name": "Two authors with year", 
+            "result": {"summary": {"Author(s)": "David A. Loeffler and Jan O. Aasly", "Year Published": 2019}},
+            "original_path": "/test/document.pdf"
+        },
+        {
+            "name": "Multiple authors with year",
+            "result": {"summary": {"Author(s)": "Livia H. Morais, Joseph C. Boktor, Siamak MahmoudianDehkordi", "Year Published": 2024}},
+            "original_path": "/test/document.pdf"
+        },
+        {
+            "name": "Single author no year",
+            "result": {"summary": {"Author(s)": "Kimberly C. Paul", "Year Published": ""}},
+            "original_path": "/test/document.pdf"
+        },
+        {
+            "name": "No author info",
+            "result": {"summary": {"Author(s)": "Not specified", "Year Published": 2023}},
+            "original_path": "/test/research_paper.pdf"
+        },
+        {
+            "name": "Comma-separated format",
+            "result": {"summary": {"Author(s)": "Smith, John A., Jones, Mary B.", "Year Published": 2023}},
+            "original_path": "/test/document.pdf"
+        }
+    ]
+    
+    console.print("[bold]Testing filename generation rules:[/bold]\n")
+    
+    for test in test_cases:
+        filename = summarizer._generate_filename(test["result"], test["original_path"])
+        console.print(f"[cyan]{test['name']}:[/cyan]")
+        console.print(f"  Input: {test['result']['summary'].get('Author(s)', 'N/A')} ({test['result']['summary'].get('Year Published', 'N/A')})")
+        console.print(f"  Output: [green]{filename}[/green]")
+        console.print()
+
+@cli.command()
 def test_json():
     """Create a test JSON file to verify output format"""
     from datetime import datetime
@@ -167,7 +216,7 @@ def test_json():
         },
         "structured_summary": {
             "Title": "Sample Research Paper on PDF Processing",
-            "Author(s)": "Test Author, Co-Author",
+            "Author(s)": "David A. Loeffler and Jan O. Aasly",
             "Year Published": 2024,
             "Journal": "Journal of Document Processing",
             "BibTeX Citation": "@article{Author2024,\n  title={Sample Research Paper on PDF Processing},\n  author={Test Author and Co-Author},\n  journal={Journal of Document Processing},\n  year={2024},\n  note={Extracted from PDF}\n}",
@@ -202,9 +251,14 @@ def test_json():
     output_dir = Path("./summaries")
     output_dir.mkdir(exist_ok=True)
     
+    # Use the smart filename generation
+    from summarizer import PDFSummarizer
+    summarizer = PDFSummarizer()
+    filename_base = summarizer._generate_filename({"summary": test_data["structured_summary"]}, "/test/test_document.pdf")
+    
     # Save test files
-    test_path = output_dir / "test_document_summary.json"
-    simple_path = output_dir / "test_document_simple.json"
+    test_path = output_dir / f"{filename_base}_summary.json"
+    simple_path = output_dir / f"{filename_base}_simple.json"
     
     with open(test_path, 'w', encoding='utf-8') as f:
         json.dump(test_data, f, indent=2, ensure_ascii=False)

@@ -120,8 +120,9 @@ class PDFSummarizer:
         # Ensure summaries directory exists
         self.output_dir.mkdir(exist_ok=True)
         
-        # Create filename based on original PDF
-        filename = Path(original_path).stem + "_summary.json"
+        # Generate intelligent filename based on author and year
+        filename_base = self._generate_filename(result, original_path)
+        filename = filename_base + "_summary.json"
         output_path = self.output_dir / filename
         
         # Create a clean output structure
@@ -150,13 +151,136 @@ class PDFSummarizer:
         # Also create a simplified version matching the examples format
         if isinstance(result['summary'], dict):
             simple_output = result['summary'].copy()
-            simple_filename = Path(original_path).stem + "_simple.json"
+            simple_filename = filename_base + "_simple.json"
             simple_path = self.output_dir / simple_filename
             
             with open(simple_path, 'w', encoding='utf-8') as f:
                 json.dump(simple_output, f, indent=2, ensure_ascii=False)
             
             self.console.print(f"[green]Simple Format Saved:[/green] {simple_path}")
+    
+    def _generate_filename(self, result: Dict, original_path: str) -> str:
+        """Generate intelligent filename based on author and year"""
+        try:
+            summary = result.get('summary', {})
+            if not isinstance(summary, dict):
+                # Fallback to original filename
+                return Path(original_path).stem
+            
+            # Extract author(s) and year
+            authors_str = summary.get('Author(s)', '')
+            year = summary.get('Year Published', '')
+            
+            # Clean and parse authors
+            if not authors_str or authors_str in ['Not specified', 'not specified', '']:
+                # No author info, use original filename
+                return Path(original_path).stem
+            
+            # Parse authors - handle various formats
+            authors = self._parse_authors(authors_str)
+            
+            if not authors:
+                return Path(original_path).stem
+            
+            # Generate filename based on rules
+            if len(authors) == 1:
+                # Rule 1: Last name of first author
+                filename_base = authors[0]
+                if year and str(year) not in ['null', 'None', '']:
+                    filename_base += f"-{year}"
+            elif len(authors) >= 2:
+                # Rule 2: First and second author last names
+                filename_base = f"{authors[0]}-{authors[1]}"
+                if year and str(year) not in ['null', 'None', '']:
+                    filename_base += f"-{year}"
+            else:
+                # Fallback
+                filename_base = authors[0]
+                if year and str(year) not in ['null', 'None', '']:
+                    filename_base += f"-{year}"
+            
+            # Clean filename - remove invalid characters
+            filename_base = self._clean_filename(filename_base)
+            
+            return filename_base
+            
+        except Exception as e:
+            self.console.print(f"[yellow]Warning: Could not generate smart filename: {e}[/yellow]")
+            return Path(original_path).stem
+    
+    def _parse_authors(self, authors_str: str) -> List[str]:
+        """Parse author string and extract last names"""
+        try:
+            # Handle common separators
+            if ' and ' in authors_str:
+                parts = authors_str.split(' and ')
+            elif ', ' in authors_str and ' et al' not in authors_str:
+                # Handle "Last, First, Last2, First2" format
+                parts = authors_str.split(', ')
+                # Group pairs for "Last, First" format
+                if len(parts) >= 2:
+                    grouped_parts = []
+                    i = 0
+                    while i < len(parts):
+                        if i + 1 < len(parts) and not any(title in parts[i+1].lower() for title in ['dr', 'prof', 'phd']):
+                            # Check if next part looks like a first name (no last name indicators)
+                            next_words = parts[i+1].split()
+                            if len(next_words) == 1 or (len(next_words) == 2 and '.' in next_words[1]):
+                                # Likely "Last, First" format
+                                grouped_parts.append(f"{parts[i]}, {parts[i+1]}")
+                                i += 2
+                            else:
+                                grouped_parts.append(parts[i])
+                                i += 1
+                        else:
+                            grouped_parts.append(parts[i])
+                            i += 1
+                    parts = grouped_parts
+            elif '; ' in authors_str:
+                parts = authors_str.split('; ')
+            else:
+                parts = [authors_str]
+            
+            last_names = []
+            for part in parts[:2]:  # Only take first 2 authors
+                part = part.strip()
+                if not part or 'et al' in part.lower():
+                    continue
+                
+                # Extract last name (assume it's the last word)
+                words = part.split()
+                if words:
+                    # Handle formats like "Smith, John" or "John Smith"
+                    if ',' in part:
+                        last_name = words[0].replace(',', '')
+                    else:
+                        last_name = words[-1]
+                    
+                    # Clean the last name
+                    last_name = last_name.strip('.,;')
+                    if last_name and len(last_name) > 1:
+                        last_names.append(last_name)
+            
+            return last_names
+            
+        except Exception:
+            return []
+    
+    def _clean_filename(self, filename: str) -> str:
+        """Clean filename by removing invalid characters"""
+        import re
+        # Remove or replace invalid filename characters
+        filename = re.sub(r'[<>:"/\\|?*]', '', filename)
+        filename = re.sub(r'\s+', '_', filename)  # Replace spaces with underscores
+        filename = filename.strip('._-')  # Remove leading/trailing dots, underscores, hyphens
+        
+        # Ensure it's not empty and not too long
+        if not filename:
+            filename = "unknown"
+        if len(filename) > 50:
+            filename = filename[:50]
+        
+        return filename
     
     def display_results(self, results: List[Dict]):
         """Display results in a formatted table"""

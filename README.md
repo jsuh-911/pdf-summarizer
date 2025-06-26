@@ -141,6 +141,11 @@ pixi run python main.py show-examples /path/to/examples
 pixi run python main.py test-json
 ```
 
+### Test filename generation rules
+```bash
+pixi run python main.py test-filenames
+```
+
 ## Categories
 
 The application automatically categorizes content into these categories:
@@ -278,18 +283,28 @@ pixi run test-json       # Create sample JSON files
 
 ## Output Files
 
-Each PDF processed will create two JSON files in the `./summaries/` directory:
+Each PDF processed will create two JSON files in the `./summaries/` directory with **intelligent filename generation**:
 
-- `document_summary.json` - Full format with metadata and categorization
-- `document_simple.json` - Clean format matching research examples
+### Filename Rules:
+1. **Single author**: `LastName-YEAR` (e.g., `Loeffler-2019`)
+2. **Two authors**: `FirstLast-SecondLast-YEAR` (e.g., `Loeffler-Aasly-2019`)
+3. **Multiple authors**: Uses first two authors `First-Second-YEAR`
+4. **No year**: Just author names (e.g., `Paul`)
+5. **No author**: Falls back to original filename
+
+### File Types:
+- `{intelligent_name}_summary.json` - Full format with metadata and categorization
+- `{intelligent_name}_simple.json` - Clean format matching research examples
 
 Example directory structure after processing:
 ```
 summaries/
-├── research_paper_summary.json
-├── research_paper_simple.json
-├── book_chapter_summary.json
-└── book_chapter_simple.json
+├── Loeffler-2019_summary.json
+├── Loeffler-2019_simple.json
+├── Morais-Boktor-2024_summary.json
+├── Morais-Boktor-2024_simple.json
+├── Paul_summary.json
+└── Paul_simple.json
 ```
 
 ## Pixi Tasks Reference
